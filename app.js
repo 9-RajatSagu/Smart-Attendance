@@ -50,10 +50,10 @@ function api(a,p){
  var body=Object.assign({action:a,pwd:S.pwd},p),req;
  if(WRITES[a])req=fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
  else{var q=Object.keys(body).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(body[k])}).join("&");req=fetch(API+(API.indexOf("?")>-1?"&":"?")+q,{cache:"no-store"})}
- return req.catch(function(){throw new Error("No connection. Check your internet.")}).then(function(r){
+ return req.catch(function(){throw new Error("The browser could not reach the backend ("+API.slice(0,32)+"…). If this is a direct Google URL, use /api/gas in config.js instead.")}).then(function(r){
   return r.json().catch(function(){return{error:"bad_backend"}}).then(function(j){
    if(j&&j.error==="unauthorized"){logout();throw new Error("Session expired. Sign in again.")}
-   if(j&&MSG[j.error])throw new Error(MSG[j.error]);
+   if(j&&MSG[j.error]){var m=MSG[j.error];if(j.preview!==undefined)m+=" [Google replied HTTP "+j.status+" from "+j.host+(j.path||"")+": "+(j.preview||"empty")+"]";throw new Error(m)}
    if(!r.ok)throw new Error((j&&j.error)||("Server error "+r.status));
    return j})})}
 
