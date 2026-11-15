@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartAttend</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section id="login"><div class="lwrap">
+ <div class="lhero"><div class="lmark">SA</div><h1>SmartAttend</h1><p>RFID attendance, live from your reader to your Google Sheet.</p>
+  <ul><li>Tap a card and attendance is marked</li><li>Assign new cards to students in one click</li><li>Calendar, records and CSV export</li></ul></div>
+ <form class="lbox" id="lf"><h2>Admin sign in</h2><label for="lpwd">Password</label>
+  <input id="lpwd" type="password" autocomplete="current-password" autofocus><div class="err" id="lerr"></div>
+  <div class="row" style="margin-top:6px"><button class="btn" id="lbtn" type="submit">Sign in</button><button class="btn ghost" type="button" id="demoBtn">Try demo</button></div></form>
+</div></section>
+<div id="app" class="hide">
+ <nav>
+  <div class="logo">SmartAttend</div>
+  <a href="#dashboard" data-p="dashboard">Dashboard<span class="badge hide" id="nb">0</span></a>
+  <a href="#students" data-p="students">Students</a>
+  <a href="#calendar" data-p="calendar">Calendar</a>
+  <a href="#records" data-p="records">Records</a>
+  <a href="#settings" data-p="settings">Settings</a>
+  <div class="sp"></div>
+  <button class="lo" id="logout">Sign out</button>
+ </nav>
+ <main id="main"></main>
+</div>
+<div id="modal" class="hide"></div>
+<div id="toast" class="hide"></div>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
