@@ -13,17 +13,17 @@
  <div class="lhero"><div class="lmark">SA</div><h1>SmartAttend</h1><p>RFID attendance, live from your reader to your Google Sheet.</p>
   <ul><li>Tap a card and attendance is marked</li><li>Assign new cards to students in one click</li><li>Calendar, records and CSV export</li></ul></div>
  <form class="lbox" id="lf"><h2>Admin sign in</h2><label for="lpwd">Password</label>
-  <input id="lpwd" type="password" autocomplete="current-password" autofocus><div class="err" id="lerr"></div>
+  <div class="pw"><input id="lpwd" type="password" autocomplete="current-password" autofocus><button type="button" class="eye" data-t="lpwd">Show</button></div><div class="err" id="lerr"></div>
   <div class="row" style="margin-top:6px"><button class="btn" id="lbtn" type="submit">Sign in</button><button class="btn ghost" type="button" id="demoBtn">Try demo</button></div></form>
 </div></section>
 <div id="app" class="hide">
  <nav>
   <div class="logo">SmartAttend</div>
-  <a href="#dashboard" data-p="dashboard">Dashboard<span class="badge hide" id="nb">0</span></a>
-  <a href="#students" data-p="students">Students</a>
-  <a href="#calendar" data-p="calendar">Calendar</a>
-  <a href="#records" data-p="records">Records</a>
-  <a href="#settings" data-p="settings">Settings</a>
+  <a href="#dashboard" data-p="dashboard"><span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></span><span class="badge hide" id="nb">0</span></a>
+  <a href="#students" data-p="students"><span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Students</span></span></a>
+  <a href="#calendar" data-p="calendar"><span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Calendar</span></span></a>
+  <a href="#records" data-p="records"><span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg><span>Records</span></span></a>
+  <a href="#settings" data-p="settings"><span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span>Settings</span></span></a>
   <div class="sp"></div>
   <button class="lo" id="logout">Sign out</button>
  </nav>

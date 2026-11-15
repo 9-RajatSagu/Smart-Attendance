@@ -3,6 +3,11 @@
 var $=function(s){return document.querySelector(s)};
 var S={url:"",pwd:"",demo:false,students:[],cards:[],page:"",timers:[],lastKey:""};
 var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},sget:function(k){try{return sessionStorage.getItem(k)}catch(e){return null}},sset:function(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},sdel:function(k){try{sessionStorage.removeItem(k)}catch(e){}}};
+function sheetUrl(){return(window.SMARTATTEND&&window.SMARTATTEND.SHEET)||store.get("sa_sheet")||""}
+function ini(n){var p=String(n).trim().split(/\s+/);return((p[0]||"?").charAt(0)+(p[1]?p[1].charAt(0):"")).toUpperCase()}
+function av(n){var h=0,t=String(n);for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))%360;return'<span class="av" style="background:hsl('+h+' 55% 42%)">'+esc(ini(n))+'</span>'}
+function pw(id,l,ac){return'<label for="'+id+'">'+l+'</label><div class="pw"><input id="'+id+'" type="password" autocomplete="'+ac+'"><button type="button" class="eye" data-t="'+id+'">Show</button></div>'}
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".eye");if(!b)return;var i=document.getElementById(b.dataset.t);if(!i)return;var show=i.type==="password";i.type=show?"text":"password";b.textContent=show?"Hide":"Show";b.setAttribute("aria-label",show?"Hide password":"Show password")});
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function iso(d){return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)}
 function todayStr(){return iso(new Date())}
@@ -30,6 +35,7 @@ function demoApi(a,p){
  if(a==="getStudents")return{students:D.students.map(function(s){return Object.assign({},s)})};
  if(a==="getNewCards")return{cards:D.cards.slice()};
  if(a==="getAttendance")return{rows:D.rows.filter(function(r){return r.date>=p.from&&r.date<=p.to})};
+ if(a==="changePassword")return{ok:true};
  if(a==="dismissCard"){D.cards=D.cards.filter(function(c){return c.uid!==p.uid});return{ok:true}}
  if(a==="saveStudent"){
   if(D.students.some(function(s){return s.prn===p.prn&&s.uid!==p.uid}))return{error:"This PRN belongs to another student."};
@@ -42,7 +48,7 @@ function demoApi(a,p){
 /* ---------- API ---------- */
 var API=(window.SMARTATTEND&&window.SMARTATTEND.API)||"/api/gas";
 S.url=API;
-var WRITES={saveStudent:1,dismissCard:1,setAttendance:1};
+var WRITES={saveStudent:1,dismissCard:1,setAttendance:1,changePassword:1};
 var MSG={bad_backend:"The server did not return data. In Apps Script, deploy as a Web app with access set to “Anyone”, and use the URL that ends in /exec.",unreachable:"Could not reach Google Apps Script. Try again in a moment."};
 function api(a,p){
  p=p||{};
@@ -83,11 +89,11 @@ function bindSim(){if($("#sim1")){$("#sim1").onclick=function(){demoScan(false)}
 
 /* ---------- dashboard ---------- */
 function pgDash(){
- $("#main").innerHTML=demoBar()+'<div class="top"><h2>Today</h2><button class="btn ghost" id="sheetBtn">Open Google Sheet</button></div><div id="nc"></div>'+
+ $("#main").innerHTML=demoBar()+'<div class="top"><div><h2>Today</h2><div class="sub">'+new Date().toDateString()+'</div></div><button class="btn ghost" id="sheetBtn">Open Google Sheet</button></div><div id="nc"></div>'+
  '<div class="stats"><div class="stat p"><b id="sP">–</b><span>Present</span></div><div class="stat a"><b id="sA">–</b><span>Absent</span></div><div class="stat"><b id="sT">–</b><span>Active students</span></div></div>'+
  '<div class="grid2"><div class="panel"><div class="live"><span class="ring off" id="ring"></span><span id="lastScan">Waiting for the first scan today…</span></div><ul class="feed" id="feed"></ul></div>'+
  '<div class="panel"><h3>Not yet in</h3><ul class="feed" id="abs"></ul></div></div>';
- bindSim();$("#sheetBtn").onclick=function(){var u=store.get("sa_sheet");if(S.demo)return toast("Demo mode has no Google Sheet.");if(!u){toast("Add the Sheet link in Settings first.");location.hash="#settings";return}window.open(u,"_blank","noopener")};
+ bindSim();$("#sheetBtn").onclick=function(){var u=sheetUrl();if(S.demo)return toast("Demo mode has no Google Sheet.");if(!u){toast("Add the Sheet link in Settings first.");location.hash="#settings";return}window.open(u,"_blank","noopener")};
  loadDash();every(loadDash,5000)}
 function loadDash(){
  var t=todayStr();
@@ -102,7 +108,7 @@ function loadDash(){
   document.querySelectorAll("#nc [data-a]").forEach(function(x){x.onclick=function(){stuForm({uid:x.dataset.a},false)}});
   document.querySelectorAll("#nc [data-x]").forEach(function(x){x.onclick=function(){api("dismissCard",{uid:x.dataset.x}).then(function(){toast("Card dismissed");loadDash()}).catch(fail)}});
   var key=rows.length?rows[0].uid+rows[0].time:"",isNew=key&&S.lastKey&&key!==S.lastKey;S.lastKey=key||S.lastKey;
-  $("#feed").innerHTML=rows.length?rows.slice(0,12).map(function(x,i){return'<li'+(i===0&&isNew?' class="new"':'')+'><span><b>'+esc(x.name)+'</b><br><small>PRN '+esc(x.prn)+'</small></span><span style="text-align:right">'+esc(x.time)+'<br><span class="tag">'+esc(x.status||"Present")+'</span></span></li>'}).join(""):'<li class="empty" style="display:block">No scans yet today. Tap a card on the reader.</li>';
+  $("#feed").innerHTML=rows.length?rows.slice(0,12).map(function(x,i){return'<li'+(i===0&&isNew?' class="new"':'')+'><span class="av-row">'+av(x.name)+'<span><b>'+esc(x.name)+'</b><br><small>PRN '+esc(x.prn)+'</small></span></span><span style="text-align:right">'+esc(x.time)+'<br><span class="tag">'+esc(x.status||"Present")+'</span></span></li>'}).join(""):'<li class="empty" style="display:block">No scans yet today. Tap a card on the reader.</li>';
   $("#abs").innerHTML=ab.length?ab.map(function(u){return'<li><span>'+esc(fn(u))+'<br><small>'+esc(u.program)+'</small></span><span class="tag bad">Absent</span></li>'}).join(""):'<li class="empty" style="display:block">Everyone is in.</li>';
   if(rows.length){var p=rows[0].time.split(":"),d=new Date();d.setHours(+p[0],+p[1],+p[2]||0);$("#lastScan").textContent="Last scan: "+rows[0].name+" at "+rows[0].time.slice(0,5);$("#ring").classList.toggle("off",(new Date()-d)/6e4>30)}
  }).catch(fail)}
@@ -123,7 +129,7 @@ function pgStudents(){
 function drawStu(){
  var q=$("#q").value.trim().toLowerCase(),fp=$("#fp").value;
  var L=S.students.filter(function(s){return(!fp||s.program===fp)&&(!q||[fn(s),s.prn,s.contact,s.uid].join(" ").toLowerCase().indexOf(q)>-1)});
- $("#sb").innerHTML=L.length?L.map(function(s){var p=S.pct[s.uid]||0;return'<tr class="click" data-u="'+esc(s.uid)+'"><td><b>'+esc(fn(s))+'</b><br><small>PRN '+esc(s.prn)+'</small></td><td>'+esc(s.program)+'<br><small>'+esc(s.year)+'</small></td><td>'+esc(s.contact)+'</td><td><code>'+esc(s.uid)+'</code></td><td><span class="bar"><i style="width:'+p+'%"></i></span>'+p+'%</td><td><span class="tag '+(s.status==="Active"?"":"mut")+'">'+esc(s.status)+'</span></td></tr>'}).join(""):'<tr><td colspan="6" class="empty">'+(S.students.length?"No students match your search.":"No students yet. Tap a new card on the reader, then assign it from the Dashboard, or choose Add student.")+'</td></tr>';
+ $("#sb").innerHTML=L.length?L.map(function(s){var p=S.pct[s.uid]||0;return'<tr class="click" data-u="'+esc(s.uid)+'"><td><div class="av-row">'+av(fn(s))+'<span><b>'+esc(fn(s))+'</b><br><small>PRN '+esc(s.prn)+'</small></span></div></td><td>'+esc(s.program)+'<br><small>'+esc(s.year)+'</small></td><td>'+esc(s.contact)+'</td><td><code>'+esc(s.uid)+'</code></td><td><span class="bar"><i style="width:'+p+'%"></i></span>'+p+'%</td><td><span class="tag '+(s.status==="Active"?"":"mut")+'">'+esc(s.status)+'</span></td></tr>'}).join(""):'<tr><td colspan="6" class="empty">'+(S.students.length?"No students match your search.":"No students yet. Tap a new card on the reader, then assign it from the Dashboard, or choose Add student.")+'</td></tr>';
  document.querySelectorAll("#sb tr.click").forEach(function(r){r.onclick=function(){stuForm(S.students.filter(function(s){return s.uid===r.dataset.u})[0],true)}})}
 function closeModal(){var m=$("#modal");m.classList.add("hide");m.innerHTML=""}
 function fld(id,l,v,a){return'<label for="'+id+'">'+l+'</label><input id="'+id+'" value="'+esc(v)+'" '+(a||"")+'>'}
@@ -167,7 +173,7 @@ function drawCal(){
  ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(function(d){h+='<div class="dh">'+d+'</div>'});
  for(var i=0;i<first;i++)h+='<button class="blank" tabindex="-1" disabled></button>';
  for(var d=1;d<=n;d++){var dt=iso(new Date(C.y,C.m,d)),fut=dt>td,x=dayInfo(dt);
-  h+='<button data-d="'+dt+'" class="'+(dt===C.sel?"sel ":"")+(dt===td?"today ":"")+(fut?"fut":"")+'"><b>'+d+'</b>'+(fut||!x.t?"<span>&nbsp;</span>":'<span>'+x.p+' / '+x.t+'</span><span class="bar"><i style="width:'+pct(x.p,x.t)+'%"></i></span>')+'</button>'}
+  h+='<button data-d="'+dt+'" class="'+(dt===C.sel?"sel ":"")+(dt===td?"today ":"")+(fut?"fut ":"")+(fut||!x.t?"":(pct(x.p,x.t)>=75?"hi":pct(x.p,x.t)>=40?"mid":"lo"))+'"><b>'+d+'</b>'+(fut||!x.t?"<span>&nbsp;</span>":'<span>'+x.p+' / '+x.t+'</span><span class="bar"><i style="width:'+pct(x.p,x.t)+'%"></i></span>')+'</button>'}
  $("#cal").innerHTML=h;
  document.querySelectorAll("#cal button[data-d]").forEach(function(b){b.onclick=function(){C.sel=b.dataset.d;drawCal();drawDay()}})}
 function drawDay(){
@@ -212,11 +218,23 @@ function exportCsv(){
 
 /* ---------- settings ---------- */
 function pgSettings(){
- $("#main").innerHTML='<div class="top"><h2>Settings</h2></div><div class="panel" style="max-width:560px"><label for="su">Google Sheet link</label><input id="su" type="url" placeholder="https://docs.google.com/spreadsheets/d/…" value="'+esc(store.get("sa_sheet")||"")+'"><div class="sub" style="margin-top:6px">Used by the Open Google Sheet button on the dashboard.</div>'+
+ $("#main").innerHTML='<div class="top"><h2>Settings</h2></div><div class="panel" style="max-width:560px"><label for="su">Google Sheet link</label><input id="su" type="url" placeholder="https://docs.google.com/spreadsheets/d/…" value="'+esc(sheetUrl())+'"><div class="sub" style="margin-top:6px">Used by the Open Google Sheet button on the dashboard.</div>'+
  '<label for="sa">Backend</label><input id="sa" readonly value="'+esc(S.demo?"Demo mode":S.url)+'">'+
  '<label for="sth">Theme</label><select id="sth"><option value="auto">Match my device</option><option value="light">Light</option><option value="dark">Dark</option></select>'+
  '<div class="acts"><button class="btn" id="ss">Save settings</button></div></div>';
  $("#sth").value=store.get("sa_theme")||"auto";
+ $("#main").insertAdjacentHTML("beforeend",'<div class="panel" style="max-width:560px"><h3>Change password</h3>'+pw("cp0","Current password","current-password")+pw("cp1","New password (at least 6 characters)","new-password")+pw("cp2","Confirm new password","new-password")+'<div class="hint" id="cph"></div><div class="acts"><button class="btn" id="cps">Update password</button></div></div>');
+ $("#cps").onclick=function(){var c=$("#cp0").value,n=$("#cp1").value,m=$("#cp2").value,h=$("#cph");h.textContent="";
+  if(!c||!n||!m)return h.textContent="Fill in all three fields.";
+  if(n.length<6)return h.textContent="New password must be at least 6 characters.";
+  if(n!==m)return h.textContent="The new passwords do not match.";
+  if(n===c)return h.textContent="Choose a password different from the current one.";
+  if(S.demo)return toast("Demo mode: password not changed.");
+  if(c!==S.pwd)return h.textContent="Current password is incorrect.";
+  var b=$("#cps");b.disabled=true;
+  api("changePassword",{newPwd:n}).then(function(r){b.disabled=false;
+   if(r.error)return h.textContent=r.error==="unknown action"?"Update Code.gs in Apps Script and deploy a new version first.":r.error;
+   S.pwd=n;store.sset("sa_pwd",n);["cp0","cp1","cp2"].forEach(function(id){$("#"+id).value=""});toast("Password updated")}).catch(function(x){b.disabled=false;fail(x)})};
  $("#ss").onclick=function(){var s=$("#su").value.trim();if(s&&!/^https:\/\/docs\.google\.com\/spreadsheets\//.test(s))return toast("Paste a link that starts with docs.google.com/spreadsheets.");store.set("sa_sheet",s);store.set("sa_theme",$("#sth").value);applyTheme();toast("Settings saved")}}
 function applyTheme(){var t=store.get("sa_theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);else document.documentElement.removeAttribute("data-theme")}
 applyTheme();
